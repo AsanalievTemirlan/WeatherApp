@@ -3,10 +3,7 @@ package com.example.weatherapp.ui
 import android.annotation.SuppressLint
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.text.Editable
-import android.text.TextWatcher
-import android.widget.EditText
-import android.widget.SearchView
+import android.widget.Toast
 import androidx.activity.viewModels
 import com.example.weatherapp.R
 import com.example.weatherapp.databinding.ActivityMainBinding
@@ -16,7 +13,6 @@ import java.util.Calendar
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
 
-    private var city: String = ""
     private lateinit var binding: ActivityMainBinding
     private val viewModel: WeatherViewModel by viewModels()
 
@@ -25,72 +21,57 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        val currentDate = viewModel.date()
-        val currentDayOfWeek1 = viewModel.dayName(System.currentTimeMillis())
+        bishkek()
         binding.searchBtn.setOnClickListener {
-            viewModel.getWeather(binding.search.text.toString()).observe(this) { mainWeather ->
-                mainWeather.list.let { list ->
-                    list.forEach { weatherItem ->
-                        binding.tvTemp.text = "${weatherItem.main.temp}"
-                        binding.tvHumidity.text = "${weatherItem.main.humidity} %"
-                        binding.tvMaxTemp.text = "${weatherItem.main.temp_max}°C"
-                        binding.tvSea.text = "${weatherItem.main.pressure} hPa"
-                        binding.tvMinTemp.text = "${weatherItem.main.temp_min}°C"
-                        binding.tvWindSpeed.text = "${weatherItem.wind.speed} m/s"
-                        binding.tvSunRise.text = "${weatherItem.sys.sunrise}"
-                        binding.tvSunSet.text = "${weatherItem.sys.sunset}"
-                        binding.tvDate.text = currentDate
-                        binding.tvDay2.text = currentDayOfWeek1
-
-                        val weather = weatherItem.weather.firstOrNull()
-                        if (weather != null) {
-                            binding.tvWeather.text = weather.main
-                            changeImages(weather.description)
-                        }
-
-                        val currentTime = System.currentTimeMillis() / 1000
-                        val currentDayOfWeek =
-                            Calendar.getInstance().apply { timeInMillis = currentTime * 1000 }
-                                .get(Calendar.DAY_OF_WEEK)
-
-                        binding.tvDay.text = when (currentDayOfWeek) {
-                            Calendar.MONDAY -> "MONDAY"
-                            Calendar.TUESDAY -> "TUESDAY"
-                            Calendar.WEDNESDAY -> "WEDNESDAY"
-                            Calendar.THURSDAY -> "THURSDAY"
-                            Calendar.FRIDAY -> "FRIDAY"
-                            Calendar.SATURDAY -> "SATURDAY"
-                            Calendar.SUNDAY -> "SUNDAY"
-                            else -> "Unknown"
-                        }
-
-                    }
+            viewModel.getWeather(binding.search.text.toString()).observe(this) {
+                with(binding) {
+                    tvTemp.text = "${it.main.temp}°C"
+                    tvMaxTemp.text = "Max: ${it.main.temp_max}°C"
+                    tvMinTemp.text = "Min: ${it.main.temp_min}°C"
+                    fellLike.text = "Fells like: ${it.main.feels_like}°C"
+                    tvWeather.text = it.weather[0].main
+                    tvDay.text = it.weather[0].description
+                    weatherIcon.setImageResource(changeImages(it.weather[0].main).first)
+                    layout.setBackgroundResource(changeImages(it.weather[0].main).second)
                 }
+
             }
         }
     }
-}
+
+    @SuppressLint("SetTextI18n")
+    private fun bishkek() {
+        viewModel.getWeather("Bishkek").observe(this) {
+            with(binding) {
+                tvTemp.text = "${it.main.temp}°C"
+                tvMaxTemp.text = "Max: ${it.main.temp_max}°C"
+                tvMinTemp.text = "Min: ${it.main.temp_min}°C"
+                fellLike.text = "Fells like: ${it.main.feels_like}°C"
+                tvWeather.text = it.weather[0].main
+                tvDay.text = it.weather[0].description
+                weatherIcon.setImageResource(changeImages(it.weather[0].main).first)
+                layout.setBackgroundResource(changeImages(it.weather[0].main).second)
+            }
+
+        }
+    }
 
 
-private fun changeImages(conditions: String): Pair<Int, Int> {
-    return when (conditions) {
-        "Clear Sky", "Sunny", "Clear" -> Pair(R.drawable.img_4, R.drawable.back_sun)
-        "Partly Cloudy", "Clouds", "Overcast", "Mist", "Forge" -> Pair(
-            R.drawable.img_1,
-            R.drawable.colin
-        )
+    private fun changeImages(conditions: String): Pair<Int, Int> {
+        return when (conditions) {
+            "Mist", "Smoke", "Haze", "Dust", "Fog", "Sand", "Ash", "Squall", "Tornado", "Clouds" -> Pair(
+                R.drawable.img_1,
+                R.drawable.colin
+            )
 
-        "Light Rain", "Drizzle", "Moderate Rain", "Showers", "Heavy Rain" -> Pair(
-            R.drawable.cloud,
-            R.drawable.severin
-        )
+            "Clear" -> Pair(R.drawable.img_4, R.drawable.back_sun)
 
-        "Light Snow", "Moderate Snow", "heavy Snow", "Blizzard" -> Pair(
-            R.drawable.img_2,
-            R.drawable.back_snow
-        )
+            "Rain" -> Pair(R.drawable.cloud, R.drawable.severin)
 
-        else -> Pair(R.drawable.img_4, R.drawable.back_sun)
+            "Snow" -> Pair(R.drawable.img_2, R.drawable.back_snow)
+
+            else -> Pair(R.drawable.img_4, R.drawable.back_sun)
+        }
     }
 }
 

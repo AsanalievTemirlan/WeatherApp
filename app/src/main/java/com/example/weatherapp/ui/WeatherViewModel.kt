@@ -18,14 +18,5 @@ class WeatherViewModel @Inject constructor(private val repository: Repository): 
         return repository.getWeather(city)
     }
 
-    fun date(): String {
-        val sdf = SimpleDateFormat(" MMMM dd yyyy", Locale.getDefault())
-        return sdf.format((Date()))
-    }
-
-    fun dayName(timestamp: Long): String {
-        val sdf = SimpleDateFormat("EEE", Locale.getDefault())
-        return sdf.format((Date(timestamp)))
-    }
 
 }
